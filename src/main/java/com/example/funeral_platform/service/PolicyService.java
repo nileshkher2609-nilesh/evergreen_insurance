@@ -2,12 +2,16 @@ package com.example.funeral_platform.service;
 
 import com.example.funeral_platform.agent.AgentRepository;
 import com.example.funeral_platform.agent.Agents;
+import com.example.funeral_platform.exception.AgentNotFoundException;
 import com.example.funeral_platform.policy.Policy;
 import com.example.funeral_platform.policy.PolicyRepository;
 import com.example.funeral_platform.policy.PolicyReviewRequest;
 import com.example.funeral_platform.policy.PolicyStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import com.example.funeral_platform.exception.PolicyNotFoundException;
 
 import java.util.List;
 
@@ -15,19 +19,20 @@ import java.util.List;
 @Service
 public class PolicyService {
 
-    private final PolicyRepository policyRepository;
-    private final AgentRepository agentRepository;
+ private final PolicyRepository policyRepository;
+ private final AgentRepository agentRepository;
 
     public PolicyService(PolicyRepository policyRepository, AgentRepository agentRepository){
-
         this.policyRepository = policyRepository;
         this.agentRepository = agentRepository;
     }
+
 
     public Policy createPolicy(Policy policy){
 
         return policyRepository.save(policy);
     }
+
 
     public List<Policy> getAllPolicies(){
 
@@ -37,11 +42,10 @@ public class PolicyService {
     @Transactional
     public Policy assignPolicy(Long policyId, Long agentId){
         Policy policy = policyRepository.findById(policyId)
-                .orElseThrow(() ->
-                        new RuntimeException("Policy not Found"));
+                .orElseThrow(() -> new PolicyNotFoundException("Policy Not Found"));
 
         Agents agents = agentRepository.findById(agentId)
-                .orElseThrow(() -> new RuntimeException("Agent not Found"));
+                .orElseThrow(() -> new AgentNotFoundException("Agent Not Found"));
 
         policy.setAssignedAgent(agents);
 
@@ -51,11 +55,12 @@ public class PolicyService {
     @Transactional
     public Policy reviewPolicy(Long policyId, PolicyReviewRequest request){
         Policy policy = policyRepository.findById(policyId)
-                .orElseThrow(() -> new RuntimeException("Policy Not Found"));
+                .orElseThrow(() -> new PolicyNotFoundException("Policy Not Found"));
 
         if(policy.getStatus() != PolicyStatus.PENDING){
             throw new RuntimeException("Only pending policies can be reviewed");
         }
+
         if(request.getStatus() != PolicyStatus.APPROVED && request.getStatus() !=  PolicyStatus.DENIED){
             throw new RuntimeException("Review must be correct");
         }
@@ -63,6 +68,6 @@ public class PolicyService {
         policy.setStatus(request.getStatus());
         policy.setReviewComment(request.getReviewComment());
 
-        return policyRepository.save(policy);
+        return  policyRepository.save(policy);
     }
 }

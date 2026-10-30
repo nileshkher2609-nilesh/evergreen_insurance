@@ -13,17 +13,18 @@ public class PolicyController {
 
     private final PolicyService policyService;
 
-    public PolicyController (PolicyService policyService){
+    public PolicyController(PolicyService policyService) {
         this.policyService = policyService;
     }
+
     @PostMapping
-    public Policy createPolicy (@RequestBody Policy policy){
+    public Policy createPolicy(@RequestBody  Policy policy){
         return policyService.createPolicy(policy);
     }
+
     @GetMapping
     public List<Policy> getAllPolicies(){
         return policyService.getAllPolicies();
-
     }
 
     @PutMapping("/{policyId}/assign/{agentId}")
@@ -36,4 +37,5 @@ public class PolicyController {
         return policyService.reviewPolicy(policyId,request);
 
     }
+
 }

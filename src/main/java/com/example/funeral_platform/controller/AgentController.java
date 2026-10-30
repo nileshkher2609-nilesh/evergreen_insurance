@@ -15,19 +15,17 @@ public class AgentController {
     private final AgentService agentService;
 
     public AgentController(AgentService agentService){
-
         this.agentService = agentService;
     }
 
-    @PostMapping
-    public Agents createAgent(@RequestBody Agents agents){
-
-        return agentService.createAgent(agents);
-    }
-
-
+    @GetMapping
     public List<Agents> getAllAgents(){
         return agentService.getAllAgents();
+    }
+
+    @PostMapping
+    public Agents agents(@RequestBody Agents agents){
+        return agentService.createAgent(agents);
     }
 
 }
