@@ -39,10 +39,16 @@ public class PolicyService {
         return policyRepository.findAll();
     }
 
+    public Policy getPolicyById(Long policyId) {
+
+        return policyRepository.findById(policyId)
+                .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
+    }
+
     @Transactional
     public Policy assignPolicy(Long policyId, Long agentId){
         Policy policy = policyRepository.findById(policyId)
-                .orElseThrow(() -> new PolicyNotFoundException("Policy Not Found"));
+                .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
 
         Agents agents = agentRepository.findById(agentId)
                 .orElseThrow(() -> new AgentNotFoundException("Agent Not Found"));
@@ -55,7 +61,7 @@ public class PolicyService {
     @Transactional
     public Policy reviewPolicy(Long policyId, PolicyReviewRequest request){
         Policy policy = policyRepository.findById(policyId)
-                .orElseThrow(() -> new PolicyNotFoundException("Policy Not Found"));
+                .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
 
         if(policy.getStatus() != PolicyStatus.PENDING){
             throw new RuntimeException("Only pending policies can be reviewed");
@@ -70,4 +76,6 @@ public class PolicyService {
 
         return  policyRepository.save(policy);
     }
+
+
 }
