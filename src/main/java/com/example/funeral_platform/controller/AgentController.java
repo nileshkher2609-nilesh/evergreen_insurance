@@ -4,6 +4,7 @@ package com.example.funeral_platform.controller;
 import com.example.funeral_platform.agent.Agents;
 import com.example.funeral_platform.service.AgentService;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class AgentController {
     }
 
     @PostMapping
-    public Agents agents(@RequestBody Agents agents){
+    public Agents agents(@Valid @RequestBody Agents agents){
         return agentService.createAgent(agents);
     }
 
