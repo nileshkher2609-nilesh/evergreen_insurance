@@ -1,5 +1,7 @@
 package com.example.funeral_platform.controller;
 
+import com.example.funeral_platform.dto.request.PolicyRequest;
+import com.example.funeral_platform.dto.response.PolicyResponse;
 import com.example.funeral_platform.policy.Policy;
 import com.example.funeral_platform.policy.PolicyReviewRequest;
 import com.example.funeral_platform.service.PolicyService;
@@ -19,17 +21,17 @@ public class PolicyController {
     }
 
     @PostMapping
-    public Policy createPolicy(@Valid @RequestBody  Policy policy){
-        return policyService.createPolicy(policy);
+    public PolicyResponse createPolicy(@Valid @RequestBody PolicyRequest request){
+        return policyService.createPolicy(request);
     }
 
     @GetMapping
-    public List<Policy> getAllPolicies(){
+    public List<PolicyResponse> getAllPolicies(){
         return policyService.getAllPolicies();
     }
 
     @GetMapping("/{policyId}")
-    public Policy getPolicyById(@PathVariable Long policyId){
+    public PolicyResponse getPolicyById(@PathVariable Long policyId){
         return policyService.getPolicyById(policyId);
     }
 
