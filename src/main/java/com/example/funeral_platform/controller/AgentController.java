@@ -2,6 +2,8 @@ package com.example.funeral_platform.controller;
 
 
 import com.example.funeral_platform.agent.Agents;
+import com.example.funeral_platform.dto.request.AgentRequest;
+import com.example.funeral_platform.dto.response.AgentResponse;
 import com.example.funeral_platform.service.AgentService;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -20,13 +22,14 @@ public class AgentController {
     }
 
     @GetMapping
-    public List<Agents> getAllAgents(){
+    public List<AgentResponse> getAllAgents(){
+
         return agentService.getAllAgents();
     }
 
     @PostMapping
-    public Agents agents(@Valid @RequestBody Agents agents){
-        return agentService.createAgent(agents);
+    public AgentResponse agents(@Valid @RequestBody AgentRequest request){
+        return agentService.createAgent(request);
     }
 
 }

@@ -36,12 +36,12 @@ public class PolicyController {
     }
 
     @PutMapping("/{policyId}/assign/{agentId}")
-    public Policy assignPolicy( @Valid @PathVariable Long policyId, @PathVariable Long agentId){
+    public PolicyResponse assignPolicy( @Valid @PathVariable Long policyId, @PathVariable Long agentId){
         return policyService.assignPolicy(policyId,agentId);
     }
 
     @PutMapping("/{policyId}/review")
-    public Policy reviewPolicy(@Valid @PathVariable Long policyId, @RequestBody PolicyReviewRequest request){
+    public PolicyResponse reviewPolicy(@Valid @PathVariable Long policyId, @RequestBody PolicyReviewRequest request){
         return policyService.reviewPolicy(policyId,request);
 
     }

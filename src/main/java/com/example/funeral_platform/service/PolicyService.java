@@ -57,7 +57,7 @@ public class PolicyService {
     }
 
     @Transactional
-    public Policy assignPolicy(Long policyId, Long agentId){
+    public PolicyResponse assignPolicy(Long policyId, Long agentId){
         Policy policy = policyRepository.findById(policyId)
                 .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
 
@@ -66,11 +66,14 @@ public class PolicyService {
 
         policy.setAssignedAgent(agents);
 
-        return policyRepository.save(policy);
+        Policy savedPolicy = policyRepository.save(policy);
+
+        return convertToResponse(savedPolicy);
+
     }
 
     @Transactional
-    public Policy reviewPolicy(Long policyId, PolicyReviewRequest request){
+    public PolicyResponse reviewPolicy(Long policyId, PolicyReviewRequest request){
         Policy policy = policyRepository.findById(policyId)
                 .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
 
@@ -84,8 +87,9 @@ public class PolicyService {
 
         policy.setStatus(request.getStatus());
         policy.setReviewComment(request.getReviewComment());
+        Policy savedPolicy = policyRepository.save(policy);
 
-        return  policyRepository.save(policy);
+        return convertToResponse(savedPolicy);
     }
 
     private Policy convertToEntity(PolicyRequest request){

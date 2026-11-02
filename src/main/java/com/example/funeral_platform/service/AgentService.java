@@ -2,6 +2,9 @@ package com.example.funeral_platform.service;
 
 import com.example.funeral_platform.agent.AgentRepository;
 import com.example.funeral_platform.agent.Agents;
+import com.example.funeral_platform.dto.request.AgentRequest;
+import com.example.funeral_platform.dto.response.AgentResponse;
+import org.aspectj.weaver.loadtime.Agent;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,12 +19,39 @@ public class AgentService {
         this.agentRepository = agentRepository;
     }
 
-    public Agents createAgent(Agents agent){
+    public AgentResponse createAgent(AgentRequest request){
 
-        return agentRepository.save(agent);
+        Agents agent = convertToEntity(request);
+        Agents savedAgent = agentRepository.save(agent);
+
+        return convertToResponse(savedAgent);
     }
 
-    public List<Agents> getAllAgents(){
-        return agentRepository.findAll();
+    public List<AgentResponse> getAllAgents(){
+
+        return agentRepository.findAll()
+                .stream()
+                .map(this::convertToResponse)
+                .toList();
     }
+
+    private Agents convertToEntity(AgentRequest request){
+        Agents agent = new Agents();
+
+        agent.setName(request.getName());
+        agent.setEmail(request.getEmail());
+
+        return agent;
+    }
+
+    private AgentResponse convertToResponse(Agents agent){
+        AgentResponse response = new AgentResponse();
+
+        response.setId(agent.getId());
+        response.setName(agent.getName());
+        response.setEmail(agent.getEmail());
+
+        return response;
+    }
+
 }
