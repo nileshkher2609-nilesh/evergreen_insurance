@@ -2,15 +2,16 @@ package com.example.funeral_platform.service;
 
 import com.example.funeral_platform.agent.AgentRepository;
 import com.example.funeral_platform.agent.Agents;
+import com.example.funeral_platform.dto.request.PolicyRequest;
+import com.example.funeral_platform.dto.response.PolicyResponse;
 import com.example.funeral_platform.exception.AgentNotFoundException;
 import com.example.funeral_platform.policy.Policy;
 import com.example.funeral_platform.policy.PolicyRepository;
 import com.example.funeral_platform.policy.PolicyReviewRequest;
 import com.example.funeral_platform.policy.PolicyStatus;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import com.example.funeral_platform.exception.PolicyNotFoundException;
 
 import java.util.List;
@@ -28,21 +29,31 @@ public class PolicyService {
     }
 
 
-    public Policy createPolicy(Policy policy){
+    public PolicyResponse createPolicy(@Valid PolicyRequest request){
 
-        return policyRepository.save(policy);
+        Policy policy = convertToEntity(request);
+        Policy savedPolicy = policyRepository.save(policy);
+
+
+
+        return convertToResponse(savedPolicy);
     }
 
 
-    public List<Policy> getAllPolicies(){
+    public List<PolicyResponse> getAllPolicies(){
 
-        return policyRepository.findAll();
+        return policyRepository.findAll()
+                .stream()
+                 .map(this::convertToResponse)
+                .toList();
     }
 
-    public Policy getPolicyById(Long policyId) {
+    public PolicyResponse getPolicyById(Long policyId) {
 
-        return policyRepository.findById(policyId)
+        Policy policy = policyRepository.findById(policyId)
                 .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
+
+        return convertToResponse(policy);
     }
 
     @Transactional
@@ -77,5 +88,34 @@ public class PolicyService {
         return  policyRepository.save(policy);
     }
 
+    private Policy convertToEntity(PolicyRequest request){
+        Policy policy = new Policy();
 
+        policy.setPolicyNumber(request.getPolicyNumber());
+        policy.setApplicantName(request.getApplicantName());
+        policy.setPolicyType(request.getPolicyType());
+        policy.setCoverageAmount(request.getCoverageAmount());
+        // New policies start with PENDING status
+        policy.setStatus(PolicyStatus.PENDING);
+
+
+        return  policy;
+    }
+
+    private PolicyResponse convertToResponse(Policy policy){
+        PolicyResponse response = new PolicyResponse();
+        response.setId(policy.getId());
+        response.setPolicyNumber(policy.getPolicyNumber());
+        response.setApplicantName(policy.getApplicantName());
+        response.setPolicyType(policy.getPolicyType());
+        response.setCoverageAmount(policy.getCoverageAmount());
+        response.setStatus(policy.getStatus());
+        response.setReviewComment(policy.getReviewComment());
+
+        if (policy.getAssignedAgent() != null){
+            response.setAssignedAgentId(policy.getAssignedAgent().getId());
+        }
+
+        return response;
+    }
 }
