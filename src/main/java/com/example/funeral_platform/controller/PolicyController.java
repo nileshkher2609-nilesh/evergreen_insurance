@@ -7,6 +7,11 @@ import com.example.funeral_platform.policy.PolicyReviewRequest;
 import com.example.funeral_platform.service.PolicyService;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -21,28 +26,34 @@ public class PolicyController {
     }
 
     @PostMapping
-    public PolicyResponse createPolicy(@Valid @RequestBody PolicyRequest request){
+    public PolicyResponse createPolicy(@Valid @RequestBody PolicyRequest request) {
         return policyService.createPolicy(request);
     }
 
     @GetMapping
-    public List<PolicyResponse> getAllPolicies(){
-        return policyService.getAllPolicies();
+    public Page<PolicyResponse> getAllPolicies(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size, @RequestParam(defaultValue = "id") String sortBy, @RequestParam(defaultValue = "asc") String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return policyService.getAllPolicies(pageable);
     }
 
     @GetMapping("/{policyId}")
-    public PolicyResponse getPolicyById(@PathVariable Long policyId){
+    public PolicyResponse getPolicyById(@PathVariable Long policyId) {
         return policyService.getPolicyById(policyId);
     }
 
     @PutMapping("/{policyId}/assign/{agentId}")
-    public PolicyResponse assignPolicy( @Valid @PathVariable Long policyId, @PathVariable Long agentId){
-        return policyService.assignPolicy(policyId,agentId);
+    public PolicyResponse assignPolicy(@Valid @PathVariable Long policyId, @PathVariable Long agentId) {
+        return policyService.assignPolicy(policyId, agentId);
     }
 
     @PutMapping("/{policyId}/review")
-    public PolicyResponse reviewPolicy(@Valid @PathVariable Long policyId, @RequestBody PolicyReviewRequest request){
-        return policyService.reviewPolicy(policyId,request);
+    public PolicyResponse reviewPolicy(@Valid @PathVariable Long policyId, @RequestBody PolicyReviewRequest request) {
+        return policyService.reviewPolicy(policyId, request);
 
     }
 

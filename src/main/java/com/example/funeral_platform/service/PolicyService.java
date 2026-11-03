@@ -13,6 +13,8 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import com.example.funeral_platform.exception.PolicyNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -40,12 +42,12 @@ public class PolicyService {
     }
 
 
-    public List<PolicyResponse> getAllPolicies(){
+    public Page<PolicyResponse> getAllPolicies(Pageable pageable){
 
-        return policyRepository.findAll()
-                .stream()
-                 .map(this::convertToResponse)
-                .toList();
+        return policyRepository.findAll(pageable)
+
+                 .map(this::convertToResponse);
+
     }
 
     public PolicyResponse getPolicyById(Long policyId) {
