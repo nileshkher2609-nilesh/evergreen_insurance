@@ -4,7 +4,8 @@ import com.example.funeral_platform.agent.AgentRepository;
 import com.example.funeral_platform.agent.Agents;
 import com.example.funeral_platform.dto.request.AgentRequest;
 import com.example.funeral_platform.dto.response.AgentResponse;
-import org.aspectj.weaver.loadtime.Agent;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,12 +28,12 @@ public class AgentService {
         return convertToResponse(savedAgent);
     }
 
-    public List<AgentResponse> getAllAgents(){
+    public Page<AgentResponse> getAllAgents(Pageable pageable){
 
-        return agentRepository.findAll()
-                .stream()
-                .map(this::convertToResponse)
-                .toList();
+        return agentRepository.findAll(pageable)
+
+                .map(this::convertToResponse);
+
     }
 
     private Agents convertToEntity(AgentRequest request){
