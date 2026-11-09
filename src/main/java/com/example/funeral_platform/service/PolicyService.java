@@ -5,12 +5,11 @@ import com.example.funeral_platform.agent.Agents;
 import com.example.funeral_platform.dto.request.PolicyRequest;
 import com.example.funeral_platform.dto.response.PolicyResponse;
 import com.example.funeral_platform.exception.AgentNotFoundException;
-import com.example.funeral_platform.policy.Policy;
-import com.example.funeral_platform.policy.PolicyRepository;
-import com.example.funeral_platform.policy.PolicyReviewRequest;
-import com.example.funeral_platform.policy.PolicyStatus;
-import jakarta.transaction.Transactional;
+import com.example.funeral_platform.policy.*;
+
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.example.funeral_platform.exception.PolicyNotFoundException;
 import org.springframework.data.domain.Page;
@@ -92,6 +91,28 @@ public class PolicyService {
         Policy savedPolicy = policyRepository.save(policy);
 
         return convertToResponse(savedPolicy);
+    }
+
+    // Add this method inside PolicyService
+
+    @Transactional(readOnly = true)
+    public Page<PolicyResponse> searchPolicies(
+            String keyword,
+            PolicyStatus status,
+            Long agentId,
+            Pageable pageable) {
+
+        Specification<Policy> specification =
+                PolicySpecification.filterPolicies(
+                        keyword,
+                        status,
+                        agentId
+                );
+
+        Page<Policy> policies =
+                policyRepository.findAll(specification, pageable);
+
+        return policies.map(this::convertToResponse);
     }
 
     private Policy convertToEntity(PolicyRequest request){
