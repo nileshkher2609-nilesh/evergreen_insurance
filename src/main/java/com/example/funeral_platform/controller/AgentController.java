@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class AgentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Page<AgentResponse> getAllAgents(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "5") int size,
                                             @RequestParam(defaultValue = "id") String sortBy,
@@ -40,7 +42,8 @@ public class AgentController {
     }
 
     @PostMapping
-    public AgentResponse agents(@Valid @RequestBody AgentRequest request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public AgentResponse createAgent(@Valid @RequestBody AgentRequest request) {
         return agentService.createAgent(request);
     }
 

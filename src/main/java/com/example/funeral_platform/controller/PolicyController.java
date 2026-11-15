@@ -6,6 +6,11 @@ import com.example.funeral_platform.policy.Policy;
 import com.example.funeral_platform.policy.PolicyReviewRequest;
 import com.example.funeral_platform.policy.PolicyStatus;
 import com.example.funeral_platform.service.PolicyService;
+import com.example.funeral_platform.user.UserAccount;
+import com.example.funeral_platform.user.UserRepository;
+import com.example.funeral_platform.user.UserRole;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -13,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Set;
@@ -22,12 +28,18 @@ import java.util.Set;
 public class PolicyController {
 
     private final PolicyService policyService;
+    private final UserRepository userRepository;
 
-    public PolicyController(PolicyService policyService) {
+    public PolicyController(PolicyService policyService, UserRepository userRepository) {
         this.policyService = policyService;
+        this.userRepository = userRepository;
     }
 
+    // The reason why we added the user repository is we need authenticated user from spring security.
+
+
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public PolicyResponse createPolicy(@Valid @RequestBody PolicyRequest request) {
         return policyService.createPolicy(request);
     }
@@ -44,19 +56,46 @@ public class PolicyController {
 //    }
 
     @GetMapping("/{policyId}")
-    public PolicyResponse getPolicyById(@PathVariable Long policyId) {
-        return policyService.getPolicyById(policyId);
+    public PolicyResponse getPolicyById(@PathVariable Long policyId, @AuthenticationPrincipal UserDetails currentUser) {
+
+        UserAccount account = userRepository
+                .findByEmail(currentUser.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User account not found"));
+
+        if(account.getRole() == UserRole.ADMIN){
+            return policyService.getPolicyById(policyId);
+        }
+
+        if(account.getAgent() == null){
+            throw new IllegalArgumentException("Agent Profile not linked");
+        }
+        return policyService.getPolicyByIdForAgent(
+                policyId,
+                account.getAgent().getId()
+        );
     }
 
     @PutMapping("/{policyId}/assign/{agentId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public PolicyResponse assignPolicy(@Valid @PathVariable Long policyId, @PathVariable Long agentId) {
         return policyService.assignPolicy(policyId, agentId);
     }
 
     @PutMapping("/{policyId}/review")
-    public PolicyResponse reviewPolicy(@Valid @PathVariable Long policyId, @RequestBody PolicyReviewRequest request) {
-        return policyService.reviewPolicy(policyId, request);
+    @PreAuthorize("hasRole('AGENT')")
+    public PolicyResponse reviewPolicy(@Valid @PathVariable Long policyId, @Valid @RequestBody PolicyReviewRequest request, @AuthenticationPrincipal UserDetails currentUser) {
 
+
+        UserAccount account = userRepository
+                .findByEmail(currentUser.getUsername())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User account not found"));
+
+        if(account.getAgent() == null){
+            throw new IllegalArgumentException("Agent Profile not linked");
+        }
+
+        return policyService.reviewPolicy(policyId,request,account.getAgent().getId());
     }
 
     @GetMapping

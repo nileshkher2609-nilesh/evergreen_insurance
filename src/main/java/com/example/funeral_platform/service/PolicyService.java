@@ -7,6 +7,7 @@ import com.example.funeral_platform.dto.response.PolicyResponse;
 import com.example.funeral_platform.exception.AgentNotFoundException;
 import com.example.funeral_platform.policy.*;
 
+import org.hibernate.annotations.Temporal;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.data.jpa.domain.Specification;
@@ -73,27 +74,85 @@ public class PolicyService {
 
     }
 
-    @Transactional
-    public PolicyResponse reviewPolicy(Long policyId, PolicyReviewRequest request){
-        Policy policy = policyRepository.findById(policyId)
-                .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
+//    @Transactional
+//    public PolicyResponse reviewPolicy(Long policyId, PolicyReviewRequest request){
+//        Policy policy = policyRepository.findById(policyId)
+//                .orElseThrow(() -> new PolicyNotFoundException( "Policy not found with id: " + policyId));
+//
+//        if(policy.getStatus() != PolicyStatus.PENDING){
+//            throw new RuntimeException("Only pending policies can be reviewed");
+//        }
+//
+//        if(request.getStatus() != PolicyStatus.APPROVED && request.getStatus() !=  PolicyStatus.DENIED){
+//            throw new RuntimeException("Review must be correct");
+//        }
+//
+//        policy.setStatus(request.getStatus());
+//        policy.setReviewComment(request.getReviewComment());
+//        Policy savedPolicy = policyRepository.save(policy);
+//
+//        return convertToResponse(savedPolicy);
+//    }
 
-        if(policy.getStatus() != PolicyStatus.PENDING){
-            throw new RuntimeException("Only pending policies can be reviewed");
+
+    // below code is to check whether policy is assigned or not
+    @Transactional
+    public PolicyResponse reviewPolicy(
+            Long policyId,
+            PolicyReviewRequest request,
+            Long currentAgentId) {
+
+        Policy policy = policyRepository.findById(policyId)
+                .orElseThrow(() ->
+                        new PolicyNotFoundException("Policy not found"));
+
+        if (policy.getAssignedAgent() == null ||
+                !policy.getAssignedAgent().getId()
+                        .equals(currentAgentId)) {
+
+            throw new org.springframework.security.access
+                    .AccessDeniedException(
+                    "You can only review policies assigned to you");
         }
 
-        if(request.getStatus() != PolicyStatus.APPROVED && request.getStatus() !=  PolicyStatus.DENIED){
-            throw new RuntimeException("Review must be correct");
+        if (policy.getStatus() != PolicyStatus.PENDING) {
+            throw new IllegalArgumentException(
+                    "Only pending policies can be reviewed");
+        }
+
+        if (request.getStatus() != PolicyStatus.APPROVED &&
+                request.getStatus() != PolicyStatus.DENIED) {
+
+            throw new IllegalArgumentException(
+                    "Review status must be APPROVED or DENIED");
         }
 
         policy.setStatus(request.getStatus());
         policy.setReviewComment(request.getReviewComment());
+
         Policy savedPolicy = policyRepository.save(policy);
 
         return convertToResponse(savedPolicy);
     }
 
     // Add this method inside PolicyService
+
+    // Below is the method to restrict get policy details
+
+    @Transactional(readOnly = true)
+    public PolicyResponse getPolicyByIdForAgent(Long policyId, Long agentId){
+
+        Policy policy = policyRepository.findById(policyId)
+                .orElseThrow(() ->
+                        new PolicyNotFoundException("Policy Not Found"));
+
+        if(policy.getAssignedAgent() == null || !policy.getAssignedAgent().getId().equals(agentId)){
+            throw new org.springframework.security.access
+                    .AccessDeniedException("You cannot view this policy");
+        }
+
+        return convertToResponse(policy);
+    }
 
     @Transactional(readOnly = true)
     public Page<PolicyResponse> searchPolicies(
